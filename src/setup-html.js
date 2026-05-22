@@ -78,7 +78,7 @@ export function renderSetupHtml() {
     <details class="accordion" open>
       <summary>Step 1 — AI provider</summary>
       <div class="accordion-body">
-        <p class="hint">You need at least one AI provider key. OpenRouter is the easiest way to get started.</p>
+        <p class="hint">You need at least one AI provider key. <a href="https://openrouter.ai/workspaces/default/keys" target="_blank" rel="noopener">Get an OpenRouter API key</a> (recommended — easiest way to start).</p>
         <div class="grid">
           <div class="field full">
             ${labelHtml("OPENROUTER_API_KEY", "OpenRouter API key (recommended)", "OPENROUTER_API_KEY", true)}
