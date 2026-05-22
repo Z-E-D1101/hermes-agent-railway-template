@@ -3,21 +3,24 @@ FROM debian:bookworm-slim
 ARG HERMES_REPO=https://github.com/NousResearch/hermes-agent.git
 ARG HERMES_REF=v2026.5.16
 
+# Hermes v2026.5.16 requires Node >= 20 (better-sqlite3, camoufox-js, etc.).
+# Debian bookworm's nodejs package is v18 — install Node 22 from NodeSource.
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     ffmpeg \
-    gcc \
     git \
-    libffi-dev \
-    nodejs \
-    npm \
     python3 \
     python3-dev \
     python3-venv \
+    libffi-dev \
     ripgrep \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && node --version && npm --version
 
 RUN curl -fsSL https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
@@ -34,7 +37,7 @@ ENV PATH="/opt/hermes/.venv/bin:/root/.local/bin:${PATH}"
 RUN uv pip install -e ".[messaging,cron,mcp,pty,honcho]"
 RUN npm install --omit=dev
 RUN if [ -d /opt/hermes/scripts/whatsapp-bridge ]; then \
-      cd /opt/hermes/scripts/whatsapp-bridge && npm install --omit=dev; \
+    cd /opt/hermes/scripts/whatsapp-bridge && npm install --omit=dev; \
     fi
 
 WORKDIR /wrapper

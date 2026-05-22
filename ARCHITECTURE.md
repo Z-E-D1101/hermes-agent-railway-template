@@ -29,6 +29,7 @@
 ## Build
 
 - Hermes cloned at Docker build from `HERMES_REF` (default `v2026.5.16`)
+- **Node.js 22** (NodeSource) — Hermes npm deps require `>=20`; Debian’s default is 18
 - Installed with **uv** into `/opt/hermes/.venv`
 - Extras: `messaging`, `cron`, `mcp`, `pty`, `honcho` (eager install for reliable first message)
 
