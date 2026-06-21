@@ -22,6 +22,8 @@ export function renderSetupHtml() {
     CONFIG_API_KEY_KEY,
   ];
   const providerLabelMap = {
+    CUSTOM_ENDPOINT_URL: "Custom endpoint URL",
+    CUSTOM_ENDPOINT_API_KEY: "Custom endpoint API key",
     NVIDIA_NIM_API_KEY: "NVIDIA NIM",
     MISTRAL_API_KEY: "Mistral AI",
     GITHUB_TOKEN: "GitHub Models",

@@ -17,6 +17,8 @@ export const HERMES_HOME = (process.env.HERMES_HOME ?? "/data/hermes").trim();
 
 /** Keys persisted in HERMES_HOME/.env */
 export const MANAGED_ENV_KEYS = [
+  "CUSTOM_ENDPOINT_URL",
+  "CUSTOM_ENDPOINT_API_KEY",
   "NVIDIA_NIM_API_KEY",
   "MISTRAL_API_KEY",
   "GITHUB_TOKEN",
@@ -63,6 +65,15 @@ export const MANAGED_ENV_KEYS = [
 ];
 
 export const SECRET_KEYS = new Set([
+  "CUSTOM_ENDPOINT_API_KEY",
+  "NVIDIA_NIM_API_KEY",
+  "MISTRAL_API_KEY",
+  "GITHUB_TOKEN",
+  "GROQ_API_KEY",
+  "OPENROUTER_API_KEY",
+  "COHERE_API_KEY",
+  "CEREBRAS_API_KEY",
+  "HUGGINGFACE_API_KEY",
   "API_SERVER_KEY",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_WEBHOOK_SECRET",
@@ -81,6 +92,7 @@ export const CONFIG_API_KEY_KEY = "MODEL_API_KEY";
 
 /** At least one required for a working agent */
 export const LLM_PROVIDER_KEYS = [
+  "CUSTOM_ENDPOINT_URL",
   "NVIDIA_NIM_API_KEY",
   "MISTRAL_API_KEY",
   "GITHUB_TOKEN",

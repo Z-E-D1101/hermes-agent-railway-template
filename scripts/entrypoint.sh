@@ -37,11 +37,15 @@ if [ -d "$INSTALL_DIR/skills" ]; then
 fi
 
 # Auto-detect provider dari env vars yang terisi
-# Priority: NVIDIA NIM > Mistral > GitHub > Groq > OpenRouter > Cohere > Cerebras > HuggingFace
+# Priority: Custom Endpoint > NVIDIA NIM > Mistral > GitHub > Groq > OpenRouter > Cohere > Cerebras > HuggingFace
 PROVIDER=""
 MODEL="${HERMES_MODEL:-Auto}"
 
-if [ -n "${NVIDIA_NIM_API_KEY:-}" ]; then
+if [ -n "${CUSTOM_ENDPOINT_URL:-}" ]; then
+  PROVIDER="custom"
+  BASE_URL="${CUSTOM_ENDPOINT_URL}"
+  API_KEY="${CUSTOM_ENDPOINT_API_KEY:-}"
+elif [ -n "${NVIDIA_NIM_API_KEY:-}" ]; then
   PROVIDER="nvidia-nim"
   BASE_URL="${NIM_BASE_URL:-https://integrate.api.nvidia.com/v1}"
   API_KEY="${NVIDIA_NIM_API_KEY}"
