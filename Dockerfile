@@ -17,10 +17,16 @@ RUN apt-get update \
     libffi-dev \
     ripgrep \
     build-essential \
+    gnupg \
+    iptables \
+    iproute2 \
+    && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg -o /usr/share/keyrings/tailscale-archive-keyring.gpg \
+    && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list -o /etc/apt/sources.list.d/tailscale.list \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs tailscale \
     && rm -rf /var/lib/apt/lists/* \
-    && node --version && npm --version
+    && node --version && npm --version && tailscale version
 
 RUN curl -fsSL https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
