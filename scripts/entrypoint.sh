@@ -68,10 +68,11 @@ for i in $(seq 1 30); do
   fi
 done
 
-# Join tailnet
+# Join tailnet dengan verbose logging agar terlihat kenapa gagal
 if ! tailscale up \
   --authkey="${TAILSCALE_AUTHKEY}" \
   --hostname="${TAILSCALE_HOSTNAME:-hermes-railway}" \
+  --reset \
   2>&1 | tee /tmp/tailscale-up.log; then
   echo "[ERROR] tailscale up failed." >&2
   cat /tmp/tailscale-up.log >&2
@@ -105,6 +106,9 @@ HERMES_API_KEY="${HERMES_API_KEY:-}"
 
 # Tulis langsung config.yaml agar gateway baca provider + model yang benar
 # (hermes config set kadang tidak reliable jika dijalankan setelah startup)
+# Hapus config.yaml lama untuk mereset session yang nyangkut di OpenRouter
+rm -f "$HERMES_HOME/config.yaml"
+
 if [ -n "$HERMES_BASE_URL" ] || [ -n "$HERMES_API_KEY" ] || [ "$HERMES_PROVIDER" != "openrouter" ]; then
   python3 - <<'PY'
 import os, yaml, json
