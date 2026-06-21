@@ -17,6 +17,23 @@ export const HERMES_HOME = (process.env.HERMES_HOME ?? "/data/hermes").trim();
 
 /** Keys persisted in HERMES_HOME/.env */
 export const MANAGED_ENV_KEYS = [
+  "NVIDIA_NIM_API_KEY",
+  "MISTRAL_API_KEY",
+  "GITHUB_TOKEN",
+  "GROQ_API_KEY",
+  "OPENROUTER_API_KEY",
+  "COHERE_API_KEY",
+  "CEREBRAS_API_KEY",
+  "HUGGINGFACE_API_KEY",
+  "NIM_BASE_URL",
+  "MISTRAL_BASE_URL",
+  "GITHUB_BASE_URL",
+  "GROQ_BASE_URL",
+  "OPENROUTER_BASE_URL",
+  "COHERE_BASE_URL",
+  "CEREBRAS_BASE_URL",
+  "HF_BASE_URL",
+  "HERMES_MODEL",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_ALLOWED_USERS",
   "TELEGRAM_HOME_CHANNEL",
@@ -63,7 +80,16 @@ export const CONFIG_BASE_URL_KEY = "MODEL_BASE_URL";
 export const CONFIG_API_KEY_KEY = "MODEL_API_KEY";
 
 /** At least one required for a working agent */
-export const LLM_PROVIDER_KEYS = ["MODEL_API_KEY"];
+export const LLM_PROVIDER_KEYS = [
+  "NVIDIA_NIM_API_KEY",
+  "MISTRAL_API_KEY",
+  "GITHUB_TOKEN",
+  "GROQ_API_KEY",
+  "OPENROUTER_API_KEY",
+  "COHERE_API_KEY",
+  "CEREBRAS_API_KEY",
+  "HUGGINGFACE_API_KEY",
+];
 
 /** Fields marked with a red asterisk in the setup UI (default Telegram path) */
 export const UI_REQUIRED_FIELDS = new Set([

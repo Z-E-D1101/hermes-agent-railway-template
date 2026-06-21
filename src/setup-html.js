@@ -21,6 +21,22 @@ export function renderSetupHtml() {
     CONFIG_BASE_URL_KEY,
     CONFIG_API_KEY_KEY,
   ];
+  const providerLabelMap = {
+    NVIDIA_NIM_API_KEY: "NVIDIA NIM",
+    MISTRAL_API_KEY: "Mistral AI",
+    GITHUB_TOKEN: "GitHub Models",
+    GROQ_API_KEY: "Groq",
+    OPENROUTER_API_KEY: "OpenRouter",
+    COHERE_API_KEY: "Cohere",
+    CEREBRAS_API_KEY: "Cerebras",
+    HUGGINGFACE_API_KEY: "HuggingFace",
+  };
+  const providerFields = Object.entries(providerLabelMap)
+    .map(([key, name]) => {
+      const placeholder = key === "GITHUB_TOKEN" ? "ghp_..." : "";
+      return `<div class="field">${labelHtml(key, name, key)}<input id="${key}" autocomplete="off" placeholder="${placeholder}" /></div>`;
+    })
+    .join("\\n");
   const validationRulesJson = JSON.stringify(VALIDATION_RULES);
   const secretKeysJson = JSON.stringify([...SECRET_KEYS]);
 
@@ -87,20 +103,18 @@ export function renderSetupHtml() {
     </div>
 
     <details class="accordion" open>
-      <summary>Step 1 — AI provider (local endpoint via Tailscale)</summary>
+      <summary>Step 1 — AI provider (pilih salah satu)</summary>
       <div class="accordion-body">
         <p class="hint">
-          Endpoint sudah di-hardcode ke <code>http://100.64.73.96:20128/v1</code> (PC kamu via Tailscale).
-          Cukup isi API key dari server lokal kamu di bawah.
+          Isi <strong>satu</strong> API key di bawah. Hermes otomatis deteksi providernya.
+          Isi juga model (opsional, default: auto).
+          Semua provider sudah ready: NVIDIA NIM, Mistral, GitHub, Groq, OpenRouter, Cohere, Cerebras, HuggingFace.
         </p>
         <div class="grid">
+          ${providerFields}
           <div class="field full">
-            ${labelHtml(CONFIG_BASE_URL_KEY, "Base URL", "model.base_url")}
-            <input id="${CONFIG_BASE_URL_KEY}" placeholder="http://100.64.73.96:20128/v1" />
-          </div>
-          <div class="field full">
-            ${labelHtml(CONFIG_API_KEY_KEY, "API key (dari server lokal)", "model.api_key")}
-            <input id="${CONFIG_API_KEY_KEY}" autocomplete="off" />
+            ${labelHtml(CONFIG_MODEL_KEY, "Model (opsional)", "model.default")}
+            <input id="${CONFIG_MODEL_KEY}" placeholder="auto" />
           </div>
         </div>
       </div>

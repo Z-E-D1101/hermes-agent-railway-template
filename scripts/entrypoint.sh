@@ -36,103 +36,87 @@ if [ -d "$INSTALL_DIR/skills" ]; then
   python3 "$INSTALL_DIR/tools/skills_sync.py" || true
 fi
 
-# Tailscale WAJIB berhasil – container exit jika auth key salah/expired
-if [ -z "${TAILSCALE_AUTHKEY:-}" ]; then
-  echo "[ERROR] TAILSCALE_AUTHKEY not set. Exit." >&2
-  exit 1
+# Auto-detect provider dari env vars yang terisi
+# Priority: NVIDIA NIM > Mistral > GitHub > Groq > OpenRouter > Cohere > Cerebras > HuggingFace
+PROVIDER=""
+MODEL="${HERMES_MODEL:-Auto}"
+
+if [ -n "${NVIDIA_NIM_API_KEY:-}" ]; then
+  PROVIDER="nvidia-nim"
+  BASE_URL="${NIM_BASE_URL:-https://integrate.api.nvidia.com/v1}"
+  API_KEY="${NVIDIA_NIM_API_KEY}"
+elif [ -n "${MISTRAL_API_KEY:-}" ]; then
+  PROVIDER="mistral"
+  BASE_URL="${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}"
+  API_KEY="${MISTRAL_API_KEY}"
+elif [ -n "${GITHUB_TOKEN:-}" ]; then
+  PROVIDER="github"
+  BASE_URL="${GITHUB_BASE_URL:-https://models.inference.ai.azure.com}"
+  API_KEY="${GITHUB_TOKEN}"
+elif [ -n "${GROQ_API_KEY:-}" ]; then
+  PROVIDER="groq"
+  BASE_URL="${GROQ_BASE_URL:-https://api.groq.com/openai/v1}"
+  API_KEY="${GROQ_API_KEY}"
+elif [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  PROVIDER="openrouter"
+  BASE_URL="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+  API_KEY="${OPENROUTER_API_KEY}"
+elif [ -n "${COHERE_API_KEY:-}" ]; then
+  PROVIDER="cohere"
+  BASE_URL="${COHERE_BASE_URL:-https://api.cohere.ai/v2}"
+  API_KEY="${COHERE_API_KEY}"
+elif [ -n "${CEREBRAS_API_KEY:-}" ]; then
+  PROVIDER="cerebras"
+  BASE_URL="${CEREBRAS_BASE_URL:-https://api.cerebras.ai/v1}"
+  API_KEY="${CEREBRAS_API_KEY}"
+elif [ -n "${HUGGINGFACE_API_KEY:-}" ]; then
+  PROVIDER="huggingface-inference"
+  BASE_URL="${HF_BASE_URL:-https://api-inference.huggingface.co/v1}"
+  API_KEY="${HUGGINGFACE_API_KEY}"
 fi
 
-echo "[tailscale] Starting with authkey (last 10 chars): ...${TAILSCALE_AUTHKEY: -10}"
-mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale
-
-tailscaled \
-  --tun=userspace-networking \
-  --socks5-server=localhost:1055 \
-  --outbound-http-proxy-listen=localhost:1055 \
-  --state=/var/lib/tailscale/tailscaled.state \
-  >/tmp/tailscaled.log 2>&1 &
-
-TAILSCALED_PID=$!
-
-# Tunggu tailscaled siap
-for i in $(seq 1 30); do
-  if tailscale status >/dev/null 2>&1; then
-    echo "[tailscale] daemon ready"
-    break
-  fi
-  sleep 0.5
-  if ! kill -0 $TAILSCALED_PID 2>/dev/null; then
-    echo "[ERROR] tailscaled crashed. Log:" >&2
-    cat /tmp/tailscaled.log >&2
-    exit 1
-  fi
-done
-
-# Join tailnet dengan verbose logging agar terlihat kenapa gagal
-if ! tailscale up \
-  --authkey="${TAILSCALE_AUTHKEY}" \
-  --hostname="${TAILSCALE_HOSTNAME:-hermes-railway}" \
-  --reset \
-  2>&1 | tee /tmp/tailscale-up.log; then
-  echo "[ERROR] tailscale up failed." >&2
-  cat /tmp/tailscale-up.log >&2
-  cat /tmp/tailscaled.log >&2
-  exit 1
+if [ -z "$PROVIDER" ]; then
+  echo "[WARN] Tidak ada API key provider yang ter-set. Set salah satu:" >&2
+  echo "  NVIDIA_NIM_API_KEY, MISTRAL_API_KEY, GITHUB_TOKEN, GROQ_API_KEY," >&2
+  echo "  OPENROUTER_API_KEY, COHERE_API_KEY, CEREBRAS_API_KEY, HUGGINGFACE_API_KEY" >&2
+  echo "[WARN] Menjalankan gateway tanpa LLM... (akan error saat chat)" >&2
+else
+  echo "[provider] Detected: $PROVIDER | model: $MODEL"
 fi
 
-# Verify IP assigned
-TAILSCALE_IP=$(tailscale ip -4 2>/dev/null || true)
-if [ -z "$TAILSCALE_IP" ]; then
-  echo "[ERROR] Tailscale joined but no IP assigned. Check auth key." >&2
-  tailscale status >&2
-  exit 1
-fi
-
-echo "[tailscale] OK - Assigned IP: $TAILSCALE_IP"
-
-# Set HTTP proxy untuk akses tailnet
-export HTTP_PROXY=http://localhost:1055
-export HTTPS_PROXY=http://localhost:1055
-export ALL_PROXY=http://localhost:1055
-export NO_PROXY=127.0.0.1,localhost,::1
-
-# --- Local OpenAI-compatible endpoint (hardcoded) ---
-# Endpoint & model sudah di-hardcode di sini. Kamu hanya perlu set:
-#   HERMES_API_KEY=... di Railway Variables.
-HERMES_PROVIDER="${HERMES_PROVIDER:-custom}"
-HERMES_MODEL="${HERMES_MODEL:-Auto}"
-HERMES_BASE_URL="${HERMES_BASE_URL:-http://100.64.73.96:20128/v1}"
-HERMES_API_KEY="${HERMES_API_KEY:-}"
-
-# Tulis langsung config.yaml agar gateway baca provider + model yang benar
-# (hermes config set kadang tidak reliable jika dijalankan setelah startup)
-# Hapus config.yaml lama untuk mereset session yang nyangkut di OpenRouter
+# Tulis config.yaml baru dari awal
 rm -f "$HERMES_HOME/config.yaml"
 
-if [ -n "$HERMES_BASE_URL" ] || [ -n "$HERMES_API_KEY" ] || [ "$HERMES_PROVIDER" != "openrouter" ]; then
-  python3 - <<'PY'
-import os, yaml, json
+python3 - <<PY
+import os, yaml
+
 home = os.environ["HERMES_HOME"]
 config_path = os.path.join(home, "config.yaml")
-cfg = {}
-try:
-    if os.path.exists(config_path):
-        with open(config_path) as f:
-            cfg = yaml.safe_load(f.read()) or {}
-except Exception:
-    cfg = {}
-if "model" not in cfg:
-    cfg["model"] = {}
-cfg["model"]["provider"] = os.environ.get("HERMES_PROVIDER", "custom")
-cfg["model"]["default"] = os.environ.get("HERMES_MODEL", "Auto")
-cfg["model"]["base_url"] = os.environ.get("HERMES_BASE_URL", "")
-api_key = os.environ.get("HERMES_API_KEY", "")
+
+cfg = {
+    "model": {
+        "provider": os.environ.get("PROVIDER", "openrouter"),
+        "default": os.environ.get("MODEL", "auto"),
+    }
+}
+
+api_key = os.environ.get("API_KEY", "")
+base_url = os.environ.get("BASE_URL", "")
+
 if api_key:
     cfg["model"]["api_key"] = api_key
+if base_url:
+    cfg["model"]["base_url"] = base_url
+
+os.makedirs(home, exist_ok=True)
 with open(config_path, "w") as f:
     f.write(yaml.dump(cfg) + "\n")
-print(f"[entrypoint] wrote config.yaml with provider={cfg['model']['provider']}, model={cfg['model']['default']}, base_url={cfg['model']['base_url']}", flush=True)
+
+print(f"[entrypoint] config.yaml written:")
+print(f"  provider = {cfg['model']['provider']}")
+print(f"  model    = {cfg['model']['default']}")
+print(f"  base_url = {cfg['model'].get('base_url', 'default')}")
+print(f"  api_key  = {'***' if api_key else '(not set)'}")
 PY
-fi
 
 exec "$@"

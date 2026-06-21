@@ -1,5 +1,4 @@
 import {
-  CONFIG_BASE_URL_KEY,
   CONFIG_MODEL_KEY,
   LLM_PROVIDER_KEYS,
 } from "./constants.js";
@@ -13,7 +12,7 @@ function isNonEmpty(value) {
 }
 
 function hasAnyLlmKey(values) {
-  return isNonEmpty(values[CONFIG_BASE_URL_KEY]);
+  return LLM_PROVIDER_KEYS.some((key) => isNonEmpty(values[key]));
 }
 
 function hasCompleteTelegram(values) {
@@ -63,8 +62,8 @@ export function validateSetupValues(values) {
 
   if (!hasAnyLlmKey(values)) {
     errors.push({
-      field: CONFIG_BASE_URL_KEY,
-      message: "Isi Base URL endpoint lokal kamu.",
+      field: "OPENROUTER_API_KEY",
+      message: "Isi minimal satu API key provider (OpenRouter paling mudah).",
     });
   }
 

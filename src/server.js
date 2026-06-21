@@ -75,8 +75,7 @@ app.post("/setup/api/save", async (req, res) => {
   formValues[CONFIG_MODEL_KEY] = modelSubmitted || getDefaultModel() || "";
   
   // Custom API fields validation and defaults
-  formValues[CONFIG_BASE_URL_KEY] = (updates[CONFIG_BASE_URL_KEY] ?? "").trim();
-  formValues[CONFIG_API_KEY_KEY] = (updates[CONFIG_API_KEY_KEY] ?? "").trim();
+  // (removed — no longer needed, provider detection in entrypoint)
 
   const validation = validateSetupValues(formValues);
   if (!validation.ok) {
@@ -100,15 +99,6 @@ app.post("/setup/api/save", async (req, res) => {
   const configUpdates = {};
   if (CONFIG_MODEL_KEY in updates) {
     configUpdates.model = String(updates[CONFIG_MODEL_KEY] ?? "").trim();
-  }
-  if (CONFIG_BASE_URL_KEY in updates) {
-    configUpdates.baseUrl = String(updates[CONFIG_BASE_URL_KEY] ?? "").trim();
-  }
-  if (CONFIG_API_KEY_KEY in updates) {
-    const apiKey = String(updates[CONFIG_API_KEY_KEY] ?? "").trim();
-    if (apiKey && apiKey !== "__CLEAR__") {
-      configUpdates.apiKey = apiKey;
-    }
   }
 
   if (Object.keys(configUpdates).length > 0) {
