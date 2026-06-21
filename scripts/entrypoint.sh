@@ -76,14 +76,16 @@ if [ -n "${TAILSCALE_AUTHKEY:-}" ]; then
 fi
 
 # Optional: make Hermes use your local OpenAI-compatible endpoint via Tailscale.
-# Example Railway vars:
-#   HERMES_PROVIDER=custom
-#   HERMES_MODEL=openai/gpt-oss-20b  # or whatever your local server exposes
-#   HERMES_BASE_URL=http://100.64.73.96:20128/v1
-#   HERMES_API_KEY=local-not-needed
-[ -n "${HERMES_PROVIDER:-}" ] && hermes config set model.provider "$HERMES_PROVIDER" || true
-[ -n "${HERMES_MODEL:-}" ] && hermes config set model.default "$HERMES_MODEL" || true
-[ -n "${HERMES_BASE_URL:-}" ] && hermes config set model.base_url "$HERMES_BASE_URL" || true
-[ -n "${HERMES_API_KEY:-}" ] && hermes config set model.api_key "$HERMES_API_KEY" || true
+# Endpoint & model sudah di-hardcode di sini – kamu hanya perlu set HERMES_API_KEY
+# di Railway Variables.
+HERMES_PROVIDER="${HERMES_PROVIDER:-custom}"
+HERMES_MODEL="${HERMES_MODEL:-Auto}"
+HERMES_BASE_URL="${HERMES_BASE_URL:-http://100.64.73.96:20128/v1}"
+HERMES_API_KEY="${HERMES_API_KEY:-}"
+
+hermes config set model.provider "$HERMES_PROVIDER"
+hermes config set model.default "$HERMES_MODEL"
+hermes config set model.base_url "$HERMES_BASE_URL"
+[ -n "$HERMES_API_KEY" ] && hermes config set model.api_key "$HERMES_API_KEY" || true
 
 exec "$@"

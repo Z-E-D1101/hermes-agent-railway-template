@@ -1,4 +1,11 @@
-import { CONFIG_MODEL_KEY, MANAGED_ENV_KEYS, SECRET_KEYS } from "./constants.js";
+import {
+  CONFIG_API_KEY_KEY,
+  CONFIG_BASE_URL_KEY,
+  CONFIG_MODEL_KEY,
+  CONFIG_PROVIDER_KEY,
+  MANAGED_ENV_KEYS,
+  SECRET_KEYS,
+} from "./constants.js";
 import { VALIDATION_RULES } from "./validate-setup.js";
 
 function labelHtml(id, title, envName, required = false) {
@@ -9,7 +16,13 @@ function labelHtml(id, title, envName, required = false) {
 }
 
 export function renderSetupHtml() {
-  const keys = [...MANAGED_ENV_KEYS, CONFIG_MODEL_KEY];
+  const keys = [
+    ...MANAGED_ENV_KEYS,
+    CONFIG_MODEL_KEY,
+    CONFIG_PROVIDER_KEY,
+    CONFIG_BASE_URL_KEY,
+    CONFIG_API_KEY_KEY,
+  ];
   const validationRulesJson = JSON.stringify(VALIDATION_RULES);
   const secretKeysJson = JSON.stringify([...SECRET_KEYS]);
 
@@ -99,6 +112,15 @@ export function renderSetupHtml() {
             <div class="field">${labelHtml("GEMINI_API_KEY", "Gemini", "GEMINI_API_KEY")}<input id="GEMINI_API_KEY" autocomplete="off" /></div>
             <div class="field">${labelHtml("GLM_API_KEY", "GLM / z.ai", "GLM_API_KEY")}<input id="GLM_API_KEY" autocomplete="off" /></div>
             <div class="field">${labelHtml("OLLAMA_API_KEY", "Ollama", "OLLAMA_API_KEY")}<input id="OLLAMA_API_KEY" autocomplete="off" /></div>
+          </div>
+        </details>
+
+        <details class="nested">
+          <summary>Custom / local OpenAI-compatible endpoint</summary>
+          <div class="grid" style="margin-top:12px">
+            <div class="field full">${labelHtml(CONFIG_PROVIDER_KEY, "Provider", "model.provider")}<select id="${CONFIG_PROVIDER_KEY}"><option value="">Default</option><option value="custom">custom</option><option value="openai">openai</option><option value="ollama">ollama</option></select></div>
+            <div class="field full">${labelHtml(CONFIG_BASE_URL_KEY, "Base URL", "model.base_url")}<input id="${CONFIG_BASE_URL_KEY}" placeholder="http://100.64.73.96:20128/v1" /></div>
+            <div class="field full">${labelHtml(CONFIG_API_KEY_KEY, "API key", "model.api_key")}<input id="${CONFIG_API_KEY_KEY}" autocomplete="off" placeholder="optional if server allows anonymous" /></div>
           </div>
         </details>
       </div>

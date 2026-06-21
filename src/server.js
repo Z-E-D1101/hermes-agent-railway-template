@@ -1,6 +1,9 @@
 import express from "express";
 import {
   CONFIG_MODEL_KEY,
+  CONFIG_PROVIDER_KEY,
+  CONFIG_BASE_URL_KEY,
+  CONFIG_API_KEY_KEY,
   HERMES_API_TARGET,
   HERMES_HOME,
   MANAGED_ENV_KEYS,
@@ -8,7 +11,7 @@ import {
   PUBLIC_PORT,
   SECRET_KEYS,
 } from "./constants.js";
-import { getModelUiConfig, setDefaultModel } from "./config.js";
+import { getModelUiConfig, setModelConfig } from "./config.js";
 import { ENV_FILE, getEnvUiConfig, isPlatformConfigured, loadEnvMap, upsertEnvVars } from "./env.js";
 import { getDefaultModel } from "./config.js";
 import {
@@ -71,6 +74,11 @@ app.post("/setup/api/save", async (req, res) => {
   }
   const modelSubmitted = CONFIG_MODEL_KEY in updates ? String(updates[CONFIG_MODEL_KEY] ?? "").trim() : "";
   formValues[CONFIG_MODEL_KEY] = modelSubmitted || getDefaultModel() || "";
+  
+  // Custom API fields validation and defaults
+  formValues[CONFIG_PROVIDER_KEY] = (updates[CONFIG_PROVIDER_KEY] ?? "").trim();
+  formValues[CONFIG_BASE_URL_KEY] = (updates[CONFIG_BASE_URL_KEY] ?? "").trim();
+  formValues[CONFIG_API_KEY_KEY] = (updates[CONFIG_API_KEY_KEY] ?? "").trim();
 
   const validation = validateSetupValues(formValues);
   if (!validation.ok) {
@@ -91,11 +99,25 @@ app.post("/setup/api/save", async (req, res) => {
     envUpdates[key] = value === "__CLEAR__" ? "" : value;
   }
 
+  const configUpdates = {};
   if (CONFIG_MODEL_KEY in updates) {
-    const model = String(updates[CONFIG_MODEL_KEY] ?? "").trim();
-    if (model) {
-      setDefaultModel(model);
+    configUpdates.model = String(updates[CONFIG_MODEL_KEY] ?? "").trim();
+  }
+  if (CONFIG_PROVIDER_KEY in updates) {
+    configUpdates.provider = String(updates[CONFIG_PROVIDER_KEY] ?? "").trim();
+  }
+  if (CONFIG_BASE_URL_KEY in updates) {
+    configUpdates.baseUrl = String(updates[CONFIG_BASE_URL_KEY] ?? "").trim();
+  }
+  if (CONFIG_API_KEY_KEY in updates) {
+    const apiKey = String(updates[CONFIG_API_KEY_KEY] ?? "").trim();
+    if (apiKey && apiKey !== "__CLEAR__") {
+      configUpdates.apiKey = apiKey;
     }
+  }
+
+  if (Object.keys(configUpdates).length > 0) {
+    setModelConfig(configUpdates);
   }
 
   upsertEnvVars(envUpdates);

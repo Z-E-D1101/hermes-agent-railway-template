@@ -74,6 +74,9 @@ export const SECRET_KEYS = new Set([
 
 /** UI-only key mapped to config.yaml model.default */
 export const CONFIG_MODEL_KEY = "MODEL_DEFAULT";
+export const CONFIG_PROVIDER_KEY = "MODEL_PROVIDER";
+export const CONFIG_BASE_URL_KEY = "MODEL_BASE_URL";
+export const CONFIG_API_KEY_KEY = "MODEL_API_KEY";
 
 /** At least one required for a working agent */
 export const LLM_PROVIDER_KEYS = [

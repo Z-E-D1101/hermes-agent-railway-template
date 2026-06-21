@@ -1,5 +1,7 @@
 import {
   CONFIG_MODEL_KEY,
+  CONFIG_PROVIDER_KEY,
+  CONFIG_BASE_URL_KEY,
   LLM_PROVIDER_KEYS,
 } from "./constants.js";
 
@@ -12,6 +14,7 @@ function isNonEmpty(value) {
 }
 
 function hasAnyLlmKey(values) {
+  if (values[CONFIG_PROVIDER_KEY] === "custom" || isNonEmpty(values[CONFIG_BASE_URL_KEY])) return true;
   return LLM_PROVIDER_KEYS.some((key) => isNonEmpty(values[key]));
 }
 
