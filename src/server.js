@@ -1,9 +1,8 @@
 import express from "express";
 import {
-  CONFIG_MODEL_KEY,
-  CONFIG_PROVIDER_KEY,
-  CONFIG_BASE_URL_KEY,
   CONFIG_API_KEY_KEY,
+  CONFIG_BASE_URL_KEY,
+  CONFIG_MODEL_KEY,
   HERMES_API_TARGET,
   HERMES_HOME,
   MANAGED_ENV_KEYS,
@@ -76,7 +75,6 @@ app.post("/setup/api/save", async (req, res) => {
   formValues[CONFIG_MODEL_KEY] = modelSubmitted || getDefaultModel() || "";
   
   // Custom API fields validation and defaults
-  formValues[CONFIG_PROVIDER_KEY] = (updates[CONFIG_PROVIDER_KEY] ?? "").trim();
   formValues[CONFIG_BASE_URL_KEY] = (updates[CONFIG_BASE_URL_KEY] ?? "").trim();
   formValues[CONFIG_API_KEY_KEY] = (updates[CONFIG_API_KEY_KEY] ?? "").trim();
 
@@ -102,9 +100,6 @@ app.post("/setup/api/save", async (req, res) => {
   const configUpdates = {};
   if (CONFIG_MODEL_KEY in updates) {
     configUpdates.model = String(updates[CONFIG_MODEL_KEY] ?? "").trim();
-  }
-  if (CONFIG_PROVIDER_KEY in updates) {
-    configUpdates.provider = String(updates[CONFIG_PROVIDER_KEY] ?? "").trim();
   }
   if (CONFIG_BASE_URL_KEY in updates) {
     configUpdates.baseUrl = String(updates[CONFIG_BASE_URL_KEY] ?? "").trim();

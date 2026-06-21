@@ -2,7 +2,6 @@ import {
   CONFIG_API_KEY_KEY,
   CONFIG_BASE_URL_KEY,
   CONFIG_MODEL_KEY,
-  CONFIG_PROVIDER_KEY,
   MANAGED_ENV_KEYS,
   SECRET_KEYS,
 } from "./constants.js";
@@ -19,7 +18,6 @@ export function renderSetupHtml() {
   const keys = [
     ...MANAGED_ENV_KEYS,
     CONFIG_MODEL_KEY,
-    CONFIG_PROVIDER_KEY,
     CONFIG_BASE_URL_KEY,
     CONFIG_API_KEY_KEY,
   ];
@@ -89,40 +87,22 @@ export function renderSetupHtml() {
     </div>
 
     <details class="accordion" open>
-      <summary>Step 1 — AI provider</summary>
+      <summary>Step 1 — AI provider (local endpoint via Tailscale)</summary>
       <div class="accordion-body">
-        <p class="hint">You need at least one AI provider key. <a href="https://openrouter.ai/workspaces/default/keys" target="_blank" rel="noopener">Get an OpenRouter API key</a> (recommended — easiest way to start).</p>
+        <p class="hint">
+          Endpoint sudah di-hardcode ke <code>http://100.64.73.96:20128/v1</code> (PC kamu via Tailscale).
+          Cukup isi API key dari server lokal kamu di bawah.
+        </p>
         <div class="grid">
           <div class="field full">
-            ${labelHtml("OPENROUTER_API_KEY", "OpenRouter API key (recommended)", "OPENROUTER_API_KEY", true)}
-            <input id="OPENROUTER_API_KEY" placeholder="sk-or-…" autocomplete="off" />
+            ${labelHtml(CONFIG_BASE_URL_KEY, "Base URL", "model.base_url")}
+            <input id="${CONFIG_BASE_URL_KEY}" placeholder="http://100.64.73.96:20128/v1" />
           </div>
           <div class="field full">
-            ${labelHtml(CONFIG_MODEL_KEY, "AI model", "model.default in config", true)}
-            <input id="${CONFIG_MODEL_KEY}" placeholder="anthropic/claude-opus-4.6" />
+            ${labelHtml(CONFIG_API_KEY_KEY, "API key (dari server lokal)", "model.api_key")}
+            <input id="${CONFIG_API_KEY_KEY}" autocomplete="off" />
           </div>
         </div>
-        <details class="nested">
-          <summary>Other AI providers (optional)</summary>
-          <div class="grid" style="margin-top:12px">
-            <div class="field">${labelHtml("ANTHROPIC_API_KEY", "Anthropic", "ANTHROPIC_API_KEY")}<input id="ANTHROPIC_API_KEY" autocomplete="off" /></div>
-            <div class="field">${labelHtml("OPENAI_API_KEY", "OpenAI", "OPENAI_API_KEY")}<input id="OPENAI_API_KEY" autocomplete="off" /></div>
-            <div class="field">${labelHtml("NOVITA_API_KEY", "Novita", "NOVITA_API_KEY")}<input id="NOVITA_API_KEY" autocomplete="off" /></div>
-            <div class="field">${labelHtml("GOOGLE_API_KEY", "Google", "GOOGLE_API_KEY")}<input id="GOOGLE_API_KEY" autocomplete="off" /></div>
-            <div class="field">${labelHtml("GEMINI_API_KEY", "Gemini", "GEMINI_API_KEY")}<input id="GEMINI_API_KEY" autocomplete="off" /></div>
-            <div class="field">${labelHtml("GLM_API_KEY", "GLM / z.ai", "GLM_API_KEY")}<input id="GLM_API_KEY" autocomplete="off" /></div>
-            <div class="field">${labelHtml("OLLAMA_API_KEY", "Ollama", "OLLAMA_API_KEY")}<input id="OLLAMA_API_KEY" autocomplete="off" /></div>
-          </div>
-        </details>
-
-        <details class="nested">
-          <summary>Custom / local OpenAI-compatible endpoint</summary>
-          <div class="grid" style="margin-top:12px">
-            <div class="field full">${labelHtml(CONFIG_PROVIDER_KEY, "Provider", "model.provider")}<select id="${CONFIG_PROVIDER_KEY}"><option value="">Default</option><option value="custom">custom</option><option value="openai">openai</option><option value="ollama">ollama</option></select></div>
-            <div class="field full">${labelHtml(CONFIG_BASE_URL_KEY, "Base URL", "model.base_url")}<input id="${CONFIG_BASE_URL_KEY}" placeholder="http://100.64.73.96:20128/v1" /></div>
-            <div class="field full">${labelHtml(CONFIG_API_KEY_KEY, "API key", "model.api_key")}<input id="${CONFIG_API_KEY_KEY}" autocomplete="off" placeholder="optional if server allows anonymous" /></div>
-          </div>
-        </details>
       </div>
     </details>
 

@@ -36,44 +36,64 @@ if [ -d "$INSTALL_DIR/skills" ]; then
   python3 "$INSTALL_DIR/tools/skills_sync.py" || true
 fi
 
-# Optional: join Tailscale tailnet so Railway can reach private services on your PC.
-# Required Railway vars:
-#   TAILSCALE_AUTHKEY=tskey-auth-...
-# Optional:
-#   TAILSCALE_HOSTNAME=hermes-railway
-#   TAILSCALE_EXTRA_ARGS=--accept-routes
-if [ -n "${TAILSCALE_AUTHKEY:-}" ]; then
-  echo "Starting Tailscale..."
-  mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale
-  tailscaled \
-    --tun=userspace-networking \
-    --socks5-server=localhost:1055 \
-    --outbound-http-proxy-listen=localhost:1055 \
-    --state=/var/lib/tailscale/tailscaled.state \
-    >/tmp/tailscaled.log 2>&1 &
-
-  for i in $(seq 1 20); do
-    tailscale status >/dev/null 2>&1 && break
-    sleep 0.5
-  done
-
-  tailscale up \
-    --authkey="${TAILSCALE_AUTHKEY}" \
-    --hostname="${TAILSCALE_HOSTNAME:-hermes-railway}" \
-    ${TAILSCALE_EXTRA_ARGS:-} || {
-      echo "Tailscale failed. Log:" >&2
-      cat /tmp/tailscaled.log >&2 || true
-      exit 1
-    }
-
-  # userspace-networking has no kernel routes; apps must use the local HTTP proxy.
-  export HTTP_PROXY="${HTTP_PROXY:-http://localhost:1055}"
-  export HTTPS_PROXY="${HTTPS_PROXY:-http://localhost:1055}"
-  export ALL_PROXY="${ALL_PROXY:-http://localhost:1055}"
-  export NO_PROXY="${NO_PROXY:-127.0.0.1,localhost,::1}"
-
-  echo "Tailscale IP: $(tailscale ip -4 2>/dev/null || true)"
+# Tailscale WAJIB berhasil – container exit jika auth key salah/expired
+if [ -z "${TAILSCALE_AUTHKEY:-}" ]; then
+  echo "[ERROR] TAILSCALE_AUTHKEY not set. Exit." >&2
+  exit 1
 fi
+
+echo "[tailscale] Starting with authkey (last 10 chars): ...${TAILSCALE_AUTHKEY: -10}"
+mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale
+
+tailscaled \
+  --tun=userspace-networking \
+  --socks5-server=localhost:1055 \
+  --outbound-http-proxy-listen=localhost:1055 \
+  --state=/var/lib/tailscale/tailscaled.state \
+  >/tmp/tailscaled.log 2>&1 &
+
+TAILSCALED_PID=$!
+
+# Tunggu tailscaled siap
+for i in $(seq 1 30); do
+  if tailscale status >/dev/null 2>&1; then
+    echo "[tailscale] daemon ready"
+    break
+  fi
+  sleep 0.5
+  if ! kill -0 $TAILSCALED_PID 2>/dev/null; then
+    echo "[ERROR] tailscaled crashed. Log:" >&2
+    cat /tmp/tailscaled.log >&2
+    exit 1
+  fi
+done
+
+# Join tailnet
+if ! tailscale up \
+  --authkey="${TAILSCALE_AUTHKEY}" \
+  --hostname="${TAILSCALE_HOSTNAME:-hermes-railway}" \
+  2>&1 | tee /tmp/tailscale-up.log; then
+  echo "[ERROR] tailscale up failed." >&2
+  cat /tmp/tailscale-up.log >&2
+  cat /tmp/tailscaled.log >&2
+  exit 1
+fi
+
+# Verify IP assigned
+TAILSCALE_IP=$(tailscale ip -4 2>/dev/null || true)
+if [ -z "$TAILSCALE_IP" ]; then
+  echo "[ERROR] Tailscale joined but no IP assigned. Check auth key." >&2
+  tailscale status >&2
+  exit 1
+fi
+
+echo "[tailscale] OK - Assigned IP: $TAILSCALE_IP"
+
+# Set HTTP proxy untuk akses tailnet
+export HTTP_PROXY=http://localhost:1055
+export HTTPS_PROXY=http://localhost:1055
+export ALL_PROXY=http://localhost:1055
+export NO_PROXY=127.0.0.1,localhost,::1
 
 # --- Local OpenAI-compatible endpoint (hardcoded) ---
 # Endpoint & model sudah di-hardcode di sini. Kamu hanya perlu set:

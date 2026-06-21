@@ -17,14 +17,6 @@ export const HERMES_HOME = (process.env.HERMES_HOME ?? "/data/hermes").trim();
 
 /** Keys persisted in HERMES_HOME/.env */
 export const MANAGED_ENV_KEYS = [
-  "OPENROUTER_API_KEY",
-  "ANTHROPIC_API_KEY",
-  "OPENAI_API_KEY",
-  "NOVITA_API_KEY",
-  "GOOGLE_API_KEY",
-  "GEMINI_API_KEY",
-  "GLM_API_KEY",
-  "OLLAMA_API_KEY",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_ALLOWED_USERS",
   "TELEGRAM_HOME_CHANNEL",
@@ -54,14 +46,6 @@ export const MANAGED_ENV_KEYS = [
 ];
 
 export const SECRET_KEYS = new Set([
-  "OPENROUTER_API_KEY",
-  "ANTHROPIC_API_KEY",
-  "OPENAI_API_KEY",
-  "NOVITA_API_KEY",
-  "GOOGLE_API_KEY",
-  "GEMINI_API_KEY",
-  "GLM_API_KEY",
-  "OLLAMA_API_KEY",
   "API_SERVER_KEY",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_WEBHOOK_SECRET",
@@ -79,20 +63,11 @@ export const CONFIG_BASE_URL_KEY = "MODEL_BASE_URL";
 export const CONFIG_API_KEY_KEY = "MODEL_API_KEY";
 
 /** At least one required for a working agent */
-export const LLM_PROVIDER_KEYS = [
-  "OPENROUTER_API_KEY",
-  "ANTHROPIC_API_KEY",
-  "OPENAI_API_KEY",
-  "NOVITA_API_KEY",
-  "GOOGLE_API_KEY",
-  "GEMINI_API_KEY",
-  "GLM_API_KEY",
-  "OLLAMA_API_KEY",
-];
+export const LLM_PROVIDER_KEYS = ["MODEL_API_KEY"];
 
 /** Fields marked with a red asterisk in the setup UI (default Telegram path) */
 export const UI_REQUIRED_FIELDS = new Set([
-  "OPENROUTER_API_KEY",
+  CONFIG_API_KEY_KEY,
   CONFIG_MODEL_KEY,
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_ALLOWED_USERS",

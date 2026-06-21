@@ -1,7 +1,6 @@
 import {
-  CONFIG_MODEL_KEY,
-  CONFIG_PROVIDER_KEY,
   CONFIG_BASE_URL_KEY,
+  CONFIG_MODEL_KEY,
   LLM_PROVIDER_KEYS,
 } from "./constants.js";
 
@@ -14,8 +13,7 @@ function isNonEmpty(value) {
 }
 
 function hasAnyLlmKey(values) {
-  if (values[CONFIG_PROVIDER_KEY] === "custom" || isNonEmpty(values[CONFIG_BASE_URL_KEY])) return true;
-  return LLM_PROVIDER_KEYS.some((key) => isNonEmpty(values[key]));
+  return isNonEmpty(values[CONFIG_BASE_URL_KEY]);
 }
 
 function hasCompleteTelegram(values) {
@@ -65,15 +63,8 @@ export function validateSetupValues(values) {
 
   if (!hasAnyLlmKey(values)) {
     errors.push({
-      field: "OPENROUTER_API_KEY",
-      message: "Add at least one AI provider key (OpenRouter is the easiest).",
-    });
-  }
-
-  if (!isNonEmpty(values[CONFIG_MODEL_KEY])) {
-    errors.push({
-      field: CONFIG_MODEL_KEY,
-      message: "Choose which AI model Hermes should use.",
+      field: CONFIG_BASE_URL_KEY,
+      message: "Isi Base URL endpoint lokal kamu.",
     });
   }
 
