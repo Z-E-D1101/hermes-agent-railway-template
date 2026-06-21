@@ -75,17 +75,40 @@ if [ -n "${TAILSCALE_AUTHKEY:-}" ]; then
   echo "Tailscale IP: $(tailscale ip -4 2>/dev/null || true)"
 fi
 
-# Optional: make Hermes use your local OpenAI-compatible endpoint via Tailscale.
-# Endpoint & model sudah di-hardcode di sini – kamu hanya perlu set HERMES_API_KEY
-# di Railway Variables.
+# --- Local OpenAI-compatible endpoint (hardcoded) ---
+# Endpoint & model sudah di-hardcode di sini. Kamu hanya perlu set:
+#   HERMES_API_KEY=... di Railway Variables.
 HERMES_PROVIDER="${HERMES_PROVIDER:-custom}"
 HERMES_MODEL="${HERMES_MODEL:-Auto}"
 HERMES_BASE_URL="${HERMES_BASE_URL:-http://100.64.73.96:20128/v1}"
 HERMES_API_KEY="${HERMES_API_KEY:-}"
 
-hermes config set model.provider "$HERMES_PROVIDER"
-hermes config set model.default "$HERMES_MODEL"
-hermes config set model.base_url "$HERMES_BASE_URL"
-[ -n "$HERMES_API_KEY" ] && hermes config set model.api_key "$HERMES_API_KEY" || true
+# Tulis langsung config.yaml agar gateway baca provider + model yang benar
+# (hermes config set kadang tidak reliable jika dijalankan setelah startup)
+if [ -n "$HERMES_BASE_URL" ] || [ -n "$HERMES_API_KEY" ] || [ "$HERMES_PROVIDER" != "openrouter" ]; then
+  python3 - <<'PY'
+import os, yaml, json
+home = os.environ["HERMES_HOME"]
+config_path = os.path.join(home, "config.yaml")
+cfg = {}
+try:
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            cfg = yaml.safe_load(f.read()) or {}
+except Exception:
+    cfg = {}
+if "model" not in cfg:
+    cfg["model"] = {}
+cfg["model"]["provider"] = os.environ.get("HERMES_PROVIDER", "custom")
+cfg["model"]["default"] = os.environ.get("HERMES_MODEL", "Auto")
+cfg["model"]["base_url"] = os.environ.get("HERMES_BASE_URL", "")
+api_key = os.environ.get("HERMES_API_KEY", "")
+if api_key:
+    cfg["model"]["api_key"] = api_key
+with open(config_path, "w") as f:
+    f.write(yaml.dump(cfg) + "\n")
+print(f"[entrypoint] wrote config.yaml with provider={cfg['model']['provider']}, model={cfg['model']['default']}, base_url={cfg['model']['base_url']}", flush=True)
+PY
+fi
 
 exec "$@"
